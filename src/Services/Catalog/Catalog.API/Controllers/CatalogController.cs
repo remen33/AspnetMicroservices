@@ -5,31 +5,30 @@ using System.Net;
 
 namespace Catalog.API.Controllers
 {
-    [Route("api/v1/[controller]")]
     [ApiController]
+    [Route("api/v1/[controller]")]
     public class CatalogController : ControllerBase
     {
-
         public readonly IProductRepository productRepository;
 
         private readonly ILogger<CatalogController> logger;
 
-        public CatalogController( IProductRepository productRepository, ILogger<CatalogController> logger)
+        public CatalogController(IProductRepository productRepository, ILogger<CatalogController> logger)
         {
             this.productRepository = productRepository;
             this.logger = logger;
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<Product>),(int) HttpStatusCode.OK)]
-        public async Task<ActionResult<IEnumerable<Product>>> GeProducts() 
-        { 
-             var products = await productRepository.GetProducts();
+        [ProducesResponseType(typeof(IEnumerable<Product>), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult<IEnumerable<Product>>> GeProducts()
+        {
+            var products = await productRepository.GetProducts();
 
             return Ok(products);
         }
 
-        [HttpGet("{id:lenght(24)}", Name = "GetProductByName")]
+        [HttpGet("{id:length(24)}", Name = "GetProductByName")]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [ProducesResponseType(typeof(Product), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<IEnumerable<Product>>> GeProductById(string id)

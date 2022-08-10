@@ -2,21 +2,28 @@
 
 namespace Discount.API.Extensions
 {
-    public static class HostExtensions
+    public class HostExtensions : IHostedService
     {
-        public static IHost MigrateDatabase<TContext>(this IHost host, int? retry = 0)
+        private readonly IServiceProvider _serviceProvider;
+        public HostExtensions(IServiceProvider serviceProvider, ILogger<HostExtensions> logger)
         {
-            int retryForAvailability = retry.Value;
+            _serviceProvider = serviceProvider;
+            Logger = logger;
+        }
 
-            using (var scope = host.Services.CreateScope())
+        public ILogger<HostExtensions> Logger { get; }
+
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            using (var scope = _serviceProvider.CreateScope())
             {
                 var services = scope.ServiceProvider;
                 var configuration = services.GetRequiredService<IConfiguration>();
-                var logger = services.GetRequiredService<ILogger<TContext>>();
+                var logger = _serviceProvider.GetService<ILogger>();
 
                 try
                 {
-                    logger.LogInformation("Migration postresql database.");
+                    Logger.LogInformation("Migration postresql database.");
                     using var connection = new NpgsqlConnection
                         (configuration.GetValue<string>("DatabaseSettings:ConnectionString"));
 
@@ -42,23 +49,21 @@ namespace Discount.API.Extensions
                     command.CommandText = "INSERT INTO Coupon(ProductName, Description, Amount) VALUES('Samsung 10', 'Samsung Discount', 100);";
                     command.ExecuteNonQuery();
 
-                    logger.LogInformation("Migrated postresql database.");
+                    Logger.LogInformation("Migrated postresql database.");
 
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "An error occurred while migrating the postresql database");
+                    Logger.LogError(ex, "An error occurred while migrating the postresql database");
 
-                    if (retryForAvailability < 50)
-                    {
-                        retryForAvailability++;
-                        System.Threading.Thread.Sleep(2000);
-                        MigrateDatabase<TContext>(host, retryForAvailability);
-                    }
                 }
             }
+            return Task.CompletedTask;
+        }
 
-            return host;
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
         }
     }
 }

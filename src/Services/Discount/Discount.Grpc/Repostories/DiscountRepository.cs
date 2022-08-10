@@ -45,10 +45,18 @@ namespace Discount.Grpc.Repostories
         {
             using var connection = new NpgsqlConnection
               (configuration.GetValue<string>("DatabaseSettings:ConnectionString"));
+            var coupon = new Coupon();
+            try
+            {
+                 coupon = await connection.QueryFirstOrDefaultAsync<Coupon>
+               (" SELECT * FROM Coupon Where ProductName = @ProductName", new { productName = productName });
 
-            var coupon = await connection.QueryFirstOrDefaultAsync<Coupon>
-                (" SELECT * FROM Coupon Where ProductName = @ProductName", new { productName = productName});
+            }
+            catch (Exception ex)
+            {
 
+                
+            }
             if (coupon is null)
                 return new Coupon
                 { ProductName = "No Discount", Amount = 0, Description = "No Discount Desc" };

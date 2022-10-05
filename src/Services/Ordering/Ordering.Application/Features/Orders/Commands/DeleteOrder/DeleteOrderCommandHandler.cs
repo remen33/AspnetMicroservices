@@ -2,11 +2,8 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Ordering.Application.Contracts.Persistence;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Ordering.Application.Exceptions;
+using Ordering.Domain.Entities;
 
 namespace Ordering.Application.Features.Orders.Commands.DeleteOrder
 {
@@ -18,19 +15,26 @@ namespace Ordering.Application.Features.Orders.Commands.DeleteOrder
 
         public DeleteOrderCommandHandler(IMapper mapper, IOrderRepository orderRepository, ILogger<DeleteOrderCommandHandler> logger) 
         {
-            this.mapper = mapper;
-            this.orderRepository = orderRepository;
-            this.logger = logger;
+            this.mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            this.orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<Unit> Handle(DeleteOrderCommand request, CancellationToken cancellationToken)
         {
-            var orderToDeleted = await orderRepository.GetByIdAsync(request.Id);
+            var orderToDelete = await orderRepository.GetByIdAsync(request.Id);
 
-            if (orderToDeleted == null)
-                logger.LogError("Order mpt exist on database.");
+            if (orderToDelete == null)
+            {
+                throw new NotFoundException(nameof(Order), request.Id);
+            }
 
-            await orderRepository.DeleteAsync(orderToDeleted);
+             await orderRepository.DeleteAsync(orderToDelete);
+
+            logger.LogInformation($"Order {orderToDelete.Id} is successfully deleted.");
+
+            return Unit.Value;
+
         }
     }
 }

@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Ordering.Application.Contracts.Persistence;
+using Ordering.Application.Exceptions;
 using Ordering.Application.Features.Orders.Commands.CheckoutOrder;
 using Ordering.Domain.Entities;
 
@@ -26,7 +27,7 @@ namespace Ordering.Application.Features.Orders.Commands.UpdateOrder
             var orderToUpdate = await orderRepository.GetByIdAsync(request.Id);
             if (orderToUpdate == null)
             {
-               // throw new NotFoundException(nameof(Order), request.Id);
+                throw new NotFoundException(nameof(Order), request.Id);
             }
 
             mapper.Map(request, orderToUpdate, typeof(UpdateOrderCommand), typeof(Order));
